@@ -1,101 +1,118 @@
-import os
 import tkinter as tk
-from tkinter import ttk, messagebox
-from metadata import color_pallet
-from tkinter import filedialog as fd
+from tkinter import messagebox, filedialog as fd
+import tkinter.ttk as ttk
 from main import SegregateFiles
 from main import MergeFiles
+from PIL import Image, ImageTk
 
-filepath = ''
 
-class OpenFileUI(tk.Tk):
+class OpenUI():
 
-    def __init__(self):
-        super().__init__()
+    filePath = ''
+    def __init__(self, master=None):
+        # build ui
+        self.style = ttk.Style(root)
+        self.Frame = ttk.Frame(master)
+        self.Frame.configure(height=200, width=500)
 
-        self.title("Split Files")
-        self.geometry('450x200')
-        self.resizable(False, False)
+        # Select File Button
+        self.browseButton = ttk.Button(self.Frame, text='Select File', cursor='hand2',
+                                       command=self.select_file)
+        self.browseButton.place(
+            anchor="nw",
+            relx=0.18,
+            rely=0.36,
+            width=330,
+            x=0,
+            y=0)
 
-        style = ttk.Style(self)
-        style.theme_use('clam')
+        # Split Button
+        self.splitButton = ttk.Button(self.Frame, cursor='hand2', state='disabled', text='Split Files', command=self.generate_files)
+        self.splitButton.place(
+            anchor="nw",
+            relx=0.18,
+            rely=0.53,
+            width=158,
+            x=0,
+            y=0)
 
-        self['background'] = color_pallet.get('COLOR_PRIMIARY')
-        style.configure('Title.TLabel', font=('Lucida Sans', 16), background=color_pallet.get('COLOR_LIGHT_BG'),
-                        foreground=color_pallet.get('COLOR_DARK_TEXT'))
-        style.configure('TitleAnalysis.TLabel', font=('Lucida Sans', 12), background=color_pallet.get('COLOR_LIGHT_BG'),
-                        foreground=color_pallet.get('COLOR_DARK_TEXT'))
-        style.configure('Analysis.TLabel', font=('Lucida Sans', 10), background=color_pallet.get('COLOR_PRIMARY'),
-                        foreground=color_pallet.get('COLOR_LIGHT'))
-        style.configure('Body.TLabel', font=('helvetica', 12), background=color_pallet.get('COLOR_PRIMARY'),
-                        foreground=color_pallet.get('COLOR_LIGHT'))
-        style.configure('Background.TFrame', background=color_pallet.get('COLOR_LIGHT_BG'))
-        style.configure('Analysis.TFrame', background=color_pallet.get('COLOR_PRIMARY'))
-        style.configure('BackgroundButton.TFrame', background=color_pallet.get('COLOR_PRIMARY'))
-        style.configure('BrowseButton.TButton', background=color_pallet.get('COLOR_SEC'),
-                        foreground=color_pallet.get('COLOR_LIGHT_CONTRAST'))
-        style.configure('BrowseButton.TButton', background=[('active', color_pallet.get('COLOR_SEC'))])
-        style.configure('TNotebook.Tab', focuscolor=style.configure('.')['background'])
-        style.configure('ElementComboBox.TCombobox', fieldbackgound=color_pallet.get('COLOR_LIGHT_CONTRAST'),
-                        background=color_pallet.get('COLOR_LIGHT_CONTRAST'))
-        style.configure('Definition.TCheckbutton', background=color_pallet.get('COLOR_PRIMARY'),
-                        foreground=color_pallet.get('COLOR_LIGHT'), focuscolor=style.configure('.')['background'])
-        style.configure('Definition.TCheckbutton', background=['active', (color_pallet.get('COLOR_PRIMARY'))],
-                        foreground=['active', (color_pallet.get('COLOR_LIGHT'))])
-        style.configure('Definition.TButton', background=color_pallet.get('COLOR_PRIMARY'),
-                        foreground=color_pallet.get('COLOR_LIGHT'))
-        style.configure('Definition.TButton', background=['active', (color_pallet.get('COLOR_PRIMARY'))],
-                        foreground=['active', (color_pallet.get('COLOR_LIGHT'))])
+        # Merge Button
+        self.mergeButton = ttk.Button(self.Frame, cursor="hand2", text='Merge Files', command=self.merge_files)
+        self.mergeButton.place(
+            anchor="nw",
+            relx=0.523,
+            rely=0.53,
+            width=158,
+            x=0,
+            y=0)
 
-        container = ttk.Frame(self)
-        container.grid()
+        # Label
+        self.label = ttk.Label(self.Frame)
+        self.label.configure(
+            background="#c0c0c0",
+            font="{Calibri} 20 {}",
+            foreground="#800040",
+            justify="left",
+            text='Welcome To SMF')
 
-        self.title_frame = ttk.Frame(self, style='Background.TFrame')
-        self.title_frame.grid(row=0, column=0)
+        self.label.place(anchor="nw", relx=0.33, rely=0.05, x=0, y=0)
+        # Tag Line
+        self.tagLine = ttk.Label(self.Frame)
+        self.tagLine.configure(
+            font="{Cascadia Code} 8 {}",
+            text='Making Split & Merge Interesting')
+        self.tagLine.place(anchor="nw", relx=0.326, rely=0.24, x=0, y=0)
 
-        title = ttk.Label(self.title_frame, text='Split Files', style='Title.TLabel')
-        title.grid(row=0, column=0, sticky='WE', padx=(160, 90), pady=(5, 5))
+        # Canvas
+        canvas2 = tk.Canvas(self.Frame)
+        canvas2.configure(height=60, relief="ridge", width=60)
+        canvas2.place(anchor="nw", relx=0.05, rely=0.045, x=0, y=0)
+        self.img = ImageTk.PhotoImage(Image.open('asset/eAR Logo.jpeg').resize((70, 70), Image.Resampling.LANCZOS))
+            # self.img = tk.PhotoImage(file='asset/eAR Logo.jpeg')
+        canvas2.create_image((0, 0), anchor='nw', image=self.img)
+        self.Frame.pack(side="top")
 
-        self.body_frame = ttk.Frame(self, style='Analysis.TFrame')
-        self.body_frame.grid(row=1, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+        # Progress Bar
+        self.style.layout("LabeledProgressbar",
+         [('LabeledProgressbar.trough',
+           {'children': [('LabeledProgressbar.pbar',
+                          {'side': 'left', 'sticky': 'ns'}),
+                         ("LabeledProgressbar.label",   # label inside the bar
+                          {"sticky": ""})],
+           'sticky': 'nswe'})])
+        self.progressBar = ttk.Progressbar(self.Frame, orient='horizontal', style='LabeledProgressbar', cursor='wait', mode='determinate')
+        self.progressBar.place(anchor="nw", width=500, x=0, y=182)
 
-        load_file_button = ttk.Button(self.body_frame, text='Browse File', cursor='hand2', command=self.select_file)
-        load_file_button.grid(row=2, column=0, sticky='WE', padx=(10, 10), pady=(20, 20))
+        # Main widget
+        self.mainwindow = self.Frame
 
-        generate_files_button = ttk.Button(self.body_frame, text='Split Files', cursor='hand2',
-                                           command=self.generate_files)
-        generate_files_button.grid(row=2, column=1, sticky='WE', padx=(10, 10), pady=(20, 20))
+    def run(self):
+        self.mainwindow.mainloop()
 
-        merge_files_button = ttk.Button(self.body_frame, text='Merge Files', cursor='hand2',
-                                           command=self.merge_files)
-        merge_files_button.grid(row=2, column=2, sticky='WE', padx=(10, 10), pady=(20, 20))
-
+    def self(self):
+        pass
 
     def merge_files(self):
-        label_loading = ttk.Label(self.body_frame, text='Status: Select directory...', style='Body.TLabel')
-        label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
 
-        file_dir = fd.askdirectory()
-        if file_dir == '' or file_dir is None:
+        filez = fd.askopenfilenames(title='Select files to Merge', filetypes=(('Excel','.xlsx'), ('All', '*.*')))
+        if len(filez) == 0 or filez is None:
             messagebox.showerror('Missing Path', 'No Directory Selected')
             exit(0)
         try:
-            MergeFiles.merge_files(file_dir)
+            output_path = fd.askdirectory(title='Select Output Path')
+            MergeFiles.merge_files(filez, output_path, self.progressBar)
         except Exception as e:
-            label_loading = ttk.Label(self.body_frame, text='Status: Failed', style='Body.TLabel')
-            label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+            self.style.configure('LabeledProgressbar', text='Status: Failed...')
             tk.messagebox.showerror('Failed', e)
 
-        label_loading = ttk.Label(self.body_frame, text='Status: Successful', style='Body.TLabel')
-        label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+        self.style.configure('LabeledProgressbar', text='Status: Successful...')
         messagebox.showinfo('Status:', 'Process Completed')
         exit(0)
 
 
     def select_file(self):
         global filepath
-        label_loading = ttk.Label(self.body_frame, text='Status: Loading . . .', style='Body.TLabel')
-        label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+        self.style.configure('LabeledProgressbar', text='Selecting File...')
 
         filetypes = (
             ('Excel', '.*xlsx'),
@@ -107,11 +124,10 @@ class OpenFileUI(tk.Tk):
         )
 
         if filepath == '' or filepath is None:
-            label_loading = ttk.Label(self.body_frame, text='Status: No File Selected', style='Body.TLabel')
-            label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+            self.style.configure('LabeledProgressbar', text='!!No File Selected!!')
         else:
-            label_loading = ttk.Label(self.body_frame, text='Status: File Loaded', style='Body.TLabel')
-            label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+            self.style.configure('LabeledProgressbar', text='!!File Loaded!!')
+            self.splitButton.configure(state='enabled')
 
     def generate_files(self):
 
@@ -119,24 +135,25 @@ class OpenFileUI(tk.Tk):
             messagebox.showerror('Missing File', 'No Input found')
             exit(0)
         else:
-            label_loading = ttk.Label(self.body_frame, text='Status: Creating Files . . .', style='Body.TLabel')
-            label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+            self.style.configure('LabeledProgressbar', text='Creating Files...')
 
-        output_path = fd.askdirectory()
+        output_path = fd.askdirectory(title='Select Output Path')
         if output_path == '' or output_path is None:
             messagebox.showerror('Missing Path', 'No Output Path Given')
             exit(0)
         try:
-            SegregateFiles.process_masterfile(filepath, output_path)
+            SegregateFiles.process_masterfile(filepath, output_path, self.progressBar)
         except Exception as e:
-            label_loading = ttk.Label(self.body_frame, text='Status: Failed', style='Body.TLabel')
-            label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+            self.style.configure('LabeledProgressbar', text='Status: !!!Failed!!')
             tk.messagebox.showerror('Failed', e)
 
-        label_loading = ttk.Label(self.body_frame, text='Status: Successful', style='Body.TLabel')
-        label_loading.grid(row=3, column=0, sticky='WE', padx=(10, 10), pady=(10, 10))
+        self.style.configure('LabeledProgressbar', text='Status: Successful')
         messagebox.showinfo('Status:', 'Process Completed')
         exit(0)
 
-file = OpenFileUI()
-file.mainloop()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title('Split/Merge Files')
+    app = OpenUI(root)
+    app.run()

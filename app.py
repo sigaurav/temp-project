@@ -16,6 +16,14 @@ class OpenUI():
         self.Frame.configure(height=200, width=500)
 
         # Select File Button
+        #############
+        self.bg = ImageTk.PhotoImage(Image.open('asset/horses.png').resize((400, 70), Image.Resampling.LANCZOS))
+        self.canvas1 = tk.Canvas(self.Frame, height=200, width=500)
+        self.canvas1.place(anchor='nw')
+        self.canvas1.create_image((10, 99), anchor='nw', image=self.bg)
+        self.Frame.pack(side='top')
+        #############
+
         self.browseButton = ttk.Button(self.Frame, text='Select File', cursor='hand2',
                                        command=self.select_file)
         self.browseButton.place(
@@ -65,9 +73,9 @@ class OpenUI():
 
         # Canvas
         canvas2 = tk.Canvas(self.Frame)
-        canvas2.configure(height=60, relief="ridge", width=60)
+        canvas2.configure(height=60, relief="ridge", width=70)
         canvas2.place(anchor="nw", relx=0.05, rely=0.045, x=0, y=0)
-        self.img = ImageTk.PhotoImage(Image.open('asset/eAR Logo.jpeg').resize((70, 70), Image.Resampling.LANCZOS))
+        self.img = ImageTk.PhotoImage(Image.open('asset/wellsLogo.png').resize((90, 90), Image.Resampling.LANCZOS))
             # self.img = tk.PhotoImage(file='asset/eAR Logo.jpeg')
         canvas2.create_image((0, 0), anchor='nw', image=self.img)
         self.Frame.pack(side="top")

@@ -1,0 +1,347 @@
+You are a principal enterprise software architect and senior full-stack engineer.
+Build a COMPLETE production-style enterprise web platform for:
+FR Y-14Q H.1 / H.2 Regulatory Data Exploration & Lineage Workbench
+This platform is a read-only, multi-user enterprise investigation portal for regulatory credit risk reporting datasets.
+The application should resemble:
+enterprise banking operations systems
+supervisory reporting portals
+wholesale credit risk analytics platforms
+regulatory investigation workbenches
+The platform must prioritize:
+large dataset exploration
+relational drill-down navigation
+metadata-driven rendering
+lineage visibility
+export functionality
+enterprise performance
+scalable architecture
+The system should feel similar to AG Grid in capability, BUT:
+DO NOT USE AG GRID OR ANY THIRD-PARTY GRID/TABLE LIBRARY.
+Instead, build a COMPLETE custom enterprise data-grid engine from scratch using Vanilla JavaScript.
+TECHNOLOGY STACK
+Use ONLY:
+Backend:
+Python 3.12
+Flask
+Jinja2
+Frontend:
+Vanilla JavaScript
+HTML5
+CSS3
+Allowed backend libraries:
+pandas
+pyarrow
+openpyxl
+sqlalchemy
+pyodbc
+Allowed architecture stubs:
+Dremio REST connector
+SQL Server connector
+STRICTLY FORBIDDEN:
+AG Grid
+DataTables
+React
+Vue
+Angular
+TypeScript
+jQuery
+Bootstrap
+Tailwind
+Node.js
+Any frontend framework
+Any third-party table/grid component
+PLATFORM OBJECTIVE
+Build a metadata-driven enterprise regulatory investigation platform capable of exploring FR Y-14Q Schedule H.1 and H.2 datasets.
+The system must support:
+drill-down exploration
+relationship navigation
+lineage tracking
+large tabular datasets
+export workflows
+multiple datasource types
+This is NOT a CRUD application.
+This is a:
+Regulatory Data Investigation Workbench
+CORE BUSINESS DOMAINS
+Model realistic FR Y-14Q H.1 and H.2 entities.
+H.1 Example Entities:
+Facilities
+Obligors
+Risk Ratings
+Commitments
+Utilization
+Collateral
+Financial Metrics
+Transactions
+Comments
+H.2 Example Entities:
+CRE Facilities
+Properties
+Sponsors
+Occupancy
+DSCR
+LTV
+Appraisals
+Geography
+RELATIONSHIP-DRIVEN ARCHITECTURE
+The system must support generic relationship-driven drill-downs.
+Example: Facility → Obligors → Transactions → Comments
+Example: CRE Facility → Property → Sponsor → Appraisal
+DO NOT hardcode drill-down logic.
+Instead, implement:
+Metadata-driven relationship configuration
+Example architecture: RELATIONSHIPS = { "facilities": { "children": ["obligors"], "foreign_key": "facility_id" }, "obligors": { "children": ["transactions"], "foreign_key": "obligor_id" } }
+The drill-down engine must dynamically traverse relationships.
+CUSTOM ENTERPRISE GRID ENGINE
+Build a COMPLETE reusable custom grid engine from scratch.
+The grid engine should be modular, scalable, reusable, and extensible.
+Required features:
+Table Rendering
+Dynamic rendering
+Efficient DOM updates
+Virtualized rows
+Chunk rendering
+Sticky headers
+Responsive layout
+Dense enterprise table styling
+Keyboard navigation
+Row selection
+Multi-row selection
+Loading indicators
+Column Features
+Column resizing
+Drag-and-drop column reordering
+Show/hide columns
+Frozen/pinned columns
+Persistent column state
+Dynamic column configuration
+Sorting
+Single-column sorting
+Multi-column sorting
+Server-side architecture support
+Filtering
+Global search
+Column filters
+Text filters
+Number filters
+Date filters
+Multi-filter combinations
+Debounced searching
+Pagination
+Client-side pagination
+Server-side pagination architecture
+Page size controls
+Performance
+Virtual scrolling
+Lazy rendering
+Efficient DOM reuse
+Event delegation
+Optimized rendering
+LINEAGE ENGINE (CRITICAL)
+Implement a complete lineage framework.
+The lineage engine must show:
+Grid Column → Source Dataset → Source Table/View → Source System → Transformation → Final Report Field
+Example: H1 Risk Rating → SQLServer.CREDIT_RISK → Dremio.H1_RISK_VIEW → Derived Transformation → Final Grid Column
+Implement:
+lineage metadata registry
+lineage APIs
+lineage UI panels
+lineage trees
+expandable lineage visualization
+Lineage must be visible from:
+grid columns
+detail panels
+drill-down views
+METADATA ENGINE
+Build a metadata-driven rendering framework.
+Implement metadata registries for:
+datasets
+columns
+relationships
+lineage mappings
+display labels
+descriptions
+report mappings
+Example: { "field": "risk_rating", "display_name": "Risk Rating", "report": "FRY14Q H1", "description": "Internal obligor risk grade", "data_type": "integer" }
+The frontend grid must dynamically render using metadata.
+PLUGGABLE DATA SOURCE ARCHITECTURE
+Implement datasource abstraction.
+Architecture: BaseDataProvider ├── CSVDataProvider ├── ExcelDataProvider ├── SQLServerDataProvider └── DremioDataProvider
+The grid engine and drill-down engine must NEVER depend directly on datasource type.
+Datasource responsibilities:
+loading data
+pagination
+filtering
+sorting
+schema discovery
+CSV DEMO DATA GENERATION
+Since live data may not exist initially, generate realistic demo datasets.
+Create:
+facilities.csv
+obligors.csv
+transactions.csv
+comments.csv
+cre_facilities.csv
+properties.csv
+sponsors.csv
+Relationships must be realistic.
+Generate:
+100+ facilities
+500+ obligors
+5000+ transactions
+realistic FR Y-14Q style attributes
+EXPORT ENGINE
+Users must export:
+full datasets
+filtered datasets
+drill-down datasets
+selected rows
+visible columns only
+Supported formats:
+CSV
+Excel (.xlsx)
+Parquet
+Implement:
+reusable export manager
+backend export APIs
+streaming downloads
+scalable export architecture
+UI / UX REQUIREMENTS
+The UI should resemble:
+Wells Fargo enterprise systems
+banking operations portals
+wholesale risk analytics dashboards
+supervisory reporting systems
+Design characteristics:
+professional
+compact
+data-dense
+operational
+keyboard-friendly
+enterprise-grade
+Color palette:
+deep red
+dark red
+gold accents
+white/light neutral backgrounds
+AVOID:
+startup dashboard aesthetics
+oversized cards
+excessive whitespace
+flashy animations
+RECOMMENDED LAYOUT
+Use an investigation workspace layout:
+| Sidebar | Main Grid | Detail/Lineage Panel |
+Features:
+collapsible sidebar
+breadcrumb navigation
+drill-down breadcrumbs
+contextual detail panels
+expandable lineage drawer
+BACKEND ARCHITECTURE
+Use enterprise layered architecture.
+/app /controllers /services /repositories /providers /models /metadata /lineage /utils /core /templates /static /css /js /grid /lineage /components /services /utils /data /exports
+Implement:
+Flask Blueprints
+service layer
+repository pattern
+provider abstraction
+config classes
+logging framework
+reusable utilities
+centralized error handling
+FRONTEND ARCHITECTURE
+Use Object-Oriented JavaScript.
+Create reusable classes such as:
+BaseGrid
+GridRenderer
+ColumnManager
+FilterManager
+SortManager
+PaginationManager
+VirtualScrollManager
+DrillDownManager
+MetadataManager
+LineageManager
+ExportManager
+APIClient
+StateManager
+ModalManager
+Requirements:
+modular JS files
+reusable components
+event-driven architecture
+optimized rendering pipeline
+MULTI-USER SUPPORT
+This is a multi-user platform.
+Implement:
+session-aware preferences
+saved column layouts
+saved filter states
+cached metadata
+The platform is:
+READ-ONLY
+DO NOT implement:
+inline editing
+writeback
+approvals
+transactional workflows
+PERFORMANCE REQUIREMENTS
+The platform must be architected for large datasets.
+Implement:
+backend pagination architecture
+lazy loading
+virtual rendering
+efficient filtering
+chunked rendering
+minimal DOM updates
+query pushdown architecture
+scalable API design
+DO NOT build naive DOM-heavy tables.
+DOCUMENTATION REQUIREMENTS
+Generate COMPLETE documentation:
+README.md
+architecture guide
+metadata engine explanation
+lineage engine explanation
+datasource architecture explanation
+drill-down framework explanation
+setup instructions
+run instructions
+export documentation
+project structure explanation
+IMPORTANT IMPLEMENTATION STRATEGY
+Generate the project incrementally in phases:
+Phase 1:
+architecture
+folder structure
+configuration system
+Phase 2:
+backend framework
+provider architecture
+metadata engine
+Phase 3:
+custom grid engine
+Phase 4:
+drill-down engine
+Phase 5:
+lineage engine
+Phase 6:
+export engine
+Phase 7:
+UI styling
+Phase 8:
+performance optimization
+Phase 9:
+documentation
+FINAL REQUIREMENTS
+Provide COMPLETE runnable production-style code.
+DO NOT provide pseudo-code.
+DO NOT skip implementations.
+Every file must be complete.
+Every class and method must contain:
+proper documentation
+enterprise-quality naming
+meaningful comments
+The final system should feel like:
+A professional enterprise FR Y-14Q regulatory investigation platform built for wholesale banking risk operations.

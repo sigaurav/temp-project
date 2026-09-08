@@ -54,16 +54,28 @@ for id_file in glob.glob(os.path.join(id_folder, "*.xlsx")):
     print("\nProcessing:", os.path.basename(id_file))
 
     # --------------------------------------------------------
-    # Get period-end date from filename
-    # Example: 31-03-2026_123456.xlsx
+    # Get information from filename
+    #
+    # Example:
+    # 31-03-2026 BRS 1003236.xlsx
+    #
+    # Period Ended = 31-03-2026
+    # GL Account   = 1003236
     # --------------------------------------------------------
 
     file_name = os.path.basename(id_file)
+    file_name_without_extension = os.path.splitext(file_name)[0]
 
     period_ended = datetime.strptime(
-        file_name[:10],
+        file_name_without_extension[:10],
         "%d-%m-%Y"
     )
+
+    gl_account = file_name_without_extension.split(
+        "BRS", 1
+    )[1].strip()
+
+    print("GL Account:", gl_account)
 
 
     # --------------------------------------------------------
@@ -72,52 +84,8 @@ for id_file in glob.glob(os.path.join(id_folder, "*.xlsx")):
 
     wb = openpyxl.load_workbook(id_file)
 
-    # --------------------------------------------------------
-    # Find GL account from "GL acount" metadata
-    # --------------------------------------------------------
-
-    gl_account = None
-    ws = None
-
-    for sheet in wb.worksheets:
-
-        for row in sheet.iter_rows():
-
-            for cell in row:
-
-                if (
-                    isinstance(cell.value, str)
-                    and cell.value.strip().lower() == "gl acount"
-                ):
-                    gl_account = sheet.cell(
-                        cell.row,
-                        cell.column + 1
-                    ).value
-
-                    # Sheet name is same as GL account
-                    # so use that sheet for updating
-                    ws = next(
-                        s for s in wb.worksheets
-                        if s.title.strip().lower()
-                        == str(gl_account).strip().lower()
-                    )
-
-                    break
-
-            if gl_account is not None:
-                break
-
-        if gl_account is not None:
-            break
-
-
-    if gl_account is None:
-        print("GL acount metadata not found - skipping")
-        wb.close()
-        continue
-
-
-    print("GL Account:", gl_account)
+    # Sheet name is same as GL account
+    ws = wb[gl_account]
 
 
     # ========================================================
@@ -155,6 +123,7 @@ for id_file in glob.glob(os.path.join(id_folder, "*.xlsx")):
         if balance is None:
             balance = 0.0
 
+
         # Sum duplicates
         if key in balance_lookup:
             balance_lookup[key] += float(balance)
@@ -163,7 +132,7 @@ for id_file in glob.glob(os.path.join(id_folder, "*.xlsx")):
 
 
     # ========================================================
-    # FIND DATA START ROW IN ID FILE
+    # FIND DATA START / END ROW IN ID FILE
     # ========================================================
 
     start_row = None

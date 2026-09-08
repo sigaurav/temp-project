@@ -1,0 +1,300 @@
+import os
+import glob
+import getpass
+import openpyxl
+from datetime import datetime
+
+
+# ============================================================
+# SETTINGS
+# ============================================================
+
+main_file = r"C:\Files\Main.xlsx"
+id_folder = r"C:\Files\ID_Files"
+
+
+# ============================================================
+# READ MAIN FILE
+# ============================================================
+
+main_wb = openpyxl.load_workbook(main_file, data_only=True)
+
+# Find "Data" sheet irrespective of case
+main_ws = next(
+    sheet for sheet in main_wb.worksheets
+    if sheet.title.lower() == "data"
+)
+
+# Headers are always on row 3
+main_headers = {}
+
+for col in range(1, main_ws.max_column + 1):
+    value = main_ws.cell(3, col).value
+
+    if value is not None:
+        main_headers[str(value).strip().lower()] = col
+
+
+# Get column numbers
+account_col = main_headers["account nbr"]
+gl_code_col = main_headers["gl code"]
+comp_code_col = main_headers["comp code"]
+au_number_col = main_headers["au number"]
+sub_gl_code_col = main_headers["sub-gl code"]
+currency_col = main_headers["currency"]
+balance_col = main_headers["balance"]
+
+
+# ============================================================
+# READ ALL ID FILES
+# ============================================================
+
+for id_file in glob.glob(os.path.join(id_folder, "*.xlsx")):
+
+    print("\nProcessing:", os.path.basename(id_file))
+
+    # --------------------------------------------------------
+    # Get period-end date from filename
+    # Example: 31-03-2026_123456.xlsx
+    # --------------------------------------------------------
+
+    file_name = os.path.basename(id_file)
+
+    period_ended = datetime.strptime(
+        file_name[:10],
+        "%d-%m-%Y"
+    )
+
+
+    # --------------------------------------------------------
+    # Open ID file
+    # --------------------------------------------------------
+
+    wb = openpyxl.load_workbook(id_file)
+
+    # --------------------------------------------------------
+    # Find GL account from "GL acount" metadata
+    # --------------------------------------------------------
+
+    gl_account = None
+    ws = None
+
+    for sheet in wb.worksheets:
+
+        for row in sheet.iter_rows():
+
+            for cell in row:
+
+                if (
+                    isinstance(cell.value, str)
+                    and cell.value.strip().lower() == "gl acount"
+                ):
+                    gl_account = sheet.cell(
+                        cell.row,
+                        cell.column + 1
+                    ).value
+
+                    # Sheet name is same as GL account
+                    # so use that sheet for updating
+                    ws = next(
+                        s for s in wb.worksheets
+                        if s.title.strip().lower()
+                        == str(gl_account).strip().lower()
+                    )
+
+                    break
+
+            if gl_account is not None:
+                break
+
+        if gl_account is not None:
+            break
+
+
+    if gl_account is None:
+        print("GL acount metadata not found - skipping")
+        wb.close()
+        continue
+
+
+    print("GL Account:", gl_account)
+
+
+    # ========================================================
+    # BUILD LOOKUP FROM MAIN FILE
+    # ========================================================
+
+    balance_lookup = {}
+
+    for row in range(4, main_ws.max_row + 1):
+
+        # First filter by GL Account
+        account = main_ws.cell(
+            row, account_col
+        ).value
+
+        if str(account).strip() != str(gl_account).strip():
+            continue
+
+
+        # Create composite key
+        key = (
+            str(main_ws.cell(row, gl_code_col).value).strip()
+            + str(main_ws.cell(row, comp_code_col).value).strip()
+            + str(main_ws.cell(row, au_number_col).value).strip()
+            + str(main_ws.cell(row, sub_gl_code_col).value).strip()
+            + str(main_ws.cell(row, currency_col).value).strip()
+        )
+
+
+        # Balance
+        balance = main_ws.cell(
+            row, balance_col
+        ).value
+
+        if balance is None:
+            balance = 0.0
+
+        # Sum duplicates
+        if key in balance_lookup:
+            balance_lookup[key] += float(balance)
+        else:
+            balance_lookup[key] = float(balance)
+
+
+    # ========================================================
+    # FIND DATA START ROW IN ID FILE
+    # ========================================================
+
+    start_row = None
+    end_row = None
+
+    for row in range(1, ws.max_row + 1):
+
+        value = ws.cell(row, 1).value
+
+        if (
+            isinstance(value, str)
+            and value.strip().lower() == "company number"
+        ):
+            start_row = row
+
+        if (
+            isinstance(value, str)
+            and value.strip().lower() == "in-proof checklist"
+        ):
+            end_row = row
+            break
+
+
+    if start_row is None:
+        print("'Company Number' not found - skipping")
+        wb.close()
+        continue
+
+    if end_row is None:
+        print("'in-proof checklist' not found - skipping")
+        wb.close()
+        continue
+
+
+    # ========================================================
+    # FIND ID FILE COLUMNS
+    # ========================================================
+
+    id_headers = {}
+
+    for col in range(1, ws.max_column + 1):
+
+        value = ws.cell(start_row, col).value
+
+        if value is not None:
+            id_headers[str(value).strip().lower()] = col
+
+
+    id_gl_code_col = id_headers["gl code"]
+    id_comp_code_col = id_headers["comp code"]
+    id_au_number_col = id_headers["au number"]
+    id_sub_gl_code_col = id_headers["sub-gl code"]
+    id_currency_col = id_headers["currency"]
+    id_balance_col = id_headers["gl balance"]
+
+
+    # ========================================================
+    # POPULATE GL BALANCE
+    # ========================================================
+
+    for row in range(start_row + 1, end_row):
+
+        key = (
+            str(ws.cell(row, id_gl_code_col).value).strip()
+            + str(ws.cell(row, id_comp_code_col).value).strip()
+            + str(ws.cell(row, id_au_number_col).value).strip()
+            + str(ws.cell(row, id_sub_gl_code_col).value).strip()
+            + str(ws.cell(row, id_currency_col).value).strip()
+        )
+
+
+        if key in balance_lookup:
+            ws.cell(
+                row,
+                id_balance_col
+            ).value = float(balance_lookup[key])
+
+
+    # ========================================================
+    # UPDATE METADATA
+    # ========================================================
+
+    prepared_by = getpass.getuser()
+
+    for row in range(1, start_row):
+
+        for col in range(1, ws.max_column + 1):
+
+            value = ws.cell(row, col).value
+
+            if not isinstance(value, str):
+                continue
+
+            label = value.strip().lower()
+
+
+            if label == "for the period ended":
+
+                ws.cell(
+                    row,
+                    col + 1
+                ).value = period_ended
+
+
+            elif label == "prepared by":
+
+                ws.cell(
+                    row,
+                    col + 1
+                ).value = prepared_by
+
+
+            elif label == "date":
+
+                ws.cell(
+                    row,
+                    col + 1
+                ).value = datetime.today()
+
+
+    # ========================================================
+    # SAVE EXISTING FILE
+    # ========================================================
+
+    wb.save(id_file)
+    wb.close()
+
+    print("Updated:", os.path.basename(id_file))
+
+
+# Close main file
+main_wb.close()
+
+print("\nCompleted.")
